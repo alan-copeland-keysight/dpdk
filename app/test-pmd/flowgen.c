@@ -39,13 +39,13 @@
 
 #include "testpmd.h"
 
-static uint32_t cfg_ip_src	= RTE_IPV4(10, 254, 0, 0);
-static uint32_t cfg_ip_dst	= RTE_IPV4(10, 253, 0, 0);
-static uint16_t cfg_udp_src	= 1000;
-static uint16_t cfg_udp_dst	= 1001;
-static struct rte_ether_addr cfg_ether_src =
+uint32_t flowgen_ip_src_addr	= RTE_IPV4(10, 254, 0, 0);
+uint32_t flowgen_ip_dst_addr	= RTE_IPV4(10, 253, 0, 0);
+static uint16_t cfg_udp_src		= 1000;
+static uint16_t cfg_udp_dst		= 1001;
+struct rte_ether_addr flowgen_mac_src_addr =
 	{{ 0x00, 0x01, 0x02, 0x03, 0x04, 0x00 }};
-static struct rte_ether_addr cfg_ether_dst =
+struct rte_ether_addr flowgen_mac_dst_addr =
 	{{ 0x00, 0x01, 0x02, 0x03, 0x04, 0x01 }};
 
 #define IP_DEFTTL  64   /* from RFC 1340. */
@@ -121,8 +121,8 @@ pkt_burst_flow_gen(struct fwd_stream *fs)
 
 			/* Initialize Ethernet header. */
 			eth_hdr = rte_pktmbuf_mtod(pkt, struct rte_ether_hdr *);
-			rte_ether_addr_copy(&cfg_ether_dst, &eth_hdr->dst_addr);
-			rte_ether_addr_copy(&cfg_ether_src, &eth_hdr->src_addr);
+			rte_ether_addr_copy(&flowgen_mac_dst_addr, &eth_hdr->dst_addr);
+			rte_ether_addr_copy(&flowgen_mac_src_addr, &eth_hdr->src_addr);
 			eth_hdr->ether_type = rte_cpu_to_be_16(RTE_ETHER_TYPE_IPV4);
 
 			/* Initialize IP header. */
@@ -134,9 +134,9 @@ pkt_burst_flow_gen(struct fwd_stream *fs)
 			ip_hdr->time_to_live	= IP_DEFTTL;
 			ip_hdr->next_proto_id	= IPPROTO_UDP;
 			ip_hdr->packet_id	= 0;
-			ip_hdr->src_addr	= rte_cpu_to_be_32(cfg_ip_src);
-			ip_hdr->dst_addr	= rte_cpu_to_be_32(cfg_ip_dst +
+			ip_hdr->src_addr	= rte_cpu_to_be_32(flowgen_ip_src_addr +
 								   next_flow);
+			ip_hdr->dst_addr	= rte_cpu_to_be_32(flowgen_ip_dst_addr);
 			ip_hdr->total_length	= RTE_CPU_TO_BE_16(pkt_size -
 								   sizeof(*eth_hdr));
 			ip_hdr->hdr_checksum	= rte_ipv4_cksum(ip_hdr);
