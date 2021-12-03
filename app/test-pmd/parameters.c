@@ -154,6 +154,9 @@ usage(char* progname)
 	printf("  --hairpinq=N: set the number of hairpin queues per port to "
 	       "N.\n");
 	printf("  --burst=N: set the number of packets per burst to N.\n");
+	printf("  --flowgen-flows=N: set the number of flows in flowgen mode to N (1 <= N <= INT32_MAX).\n");
+	printf("  --flowgen-ip=src,dst: IP addresses in flowgen mode\n");
+	printf("  --flowgen-mac=src,dst: MAC addresses in flowgen mode\n");
 	printf("  --mbcache=N: set the cache of mbuf memory pool to N.\n");
 	printf("  --rxpt=N: set prefetch threshold register of RX rings to N.\n");
 	printf("  --rxht=N: set the host threshold register of RX rings to N.\n");
@@ -629,6 +632,9 @@ launch_args_parse(int argc, char** argv)
 		{ "txd",			1, 0, 0 },
 		{ "hairpinq",			1, 0, 0 },
 		{ "burst",			1, 0, 0 },
+		{ "flowgen-flows",		1, 0, 0 },
+		{ "flowgen-ip",			1, 0, 0 },
+		{ "flowgen-mac",		1, 0, 0 },
 		{ "mbcache",			1, 0, 0 },
 		{ "txpt",			1, 0, 0 },
 		{ "txht",			1, 0, 0 },
@@ -1123,6 +1129,58 @@ launch_args_parse(int argc, char** argv)
 						MAX_PKT_BURST);
 				else
 					nb_pkt_per_burst = (uint16_t) n;
+			}
+			if (!strcmp(lgopts[opt_idx].name, "flowgen-flows")) {
+				n = atoi(optarg);
+				if (n > 0)
+					nb_flows_flowgen = (int) n;
+				else
+					rte_exit(EXIT_FAILURE,
+						 "flows must be >= 1\n");
+			}
+			if (!strcmp(lgopts[opt_idx].name, "flowgen-ip")) {
+				struct in_addr in;
+				char *end;
+
+				end = strchr(optarg, ',');
+				if (end == optarg || !end)
+					rte_exit(EXIT_FAILURE,
+						 "Invalid flowgen-ip: %s", optarg);
+
+				*end++ = 0;
+				if (inet_pton(AF_INET, optarg, &in) == 0)
+					rte_exit(EXIT_FAILURE,
+						 "Invalid flowgen source IP address: %s\n",
+						 optarg);
+				flowgen_ip_src_addr = rte_be_to_cpu_32(in.s_addr);
+
+				if (inet_pton(AF_INET, end, &in) == 0)
+					rte_exit(EXIT_FAILURE,
+						 "Invalid flowgen destination IP address: %s\n",
+						 optarg);
+				flowgen_ip_dst_addr = rte_be_to_cpu_32(in.s_addr);
+			}
+			if (!strcmp(lgopts[opt_idx].name, "flowgen-mac")) {
+				struct rte_ether_addr in;
+				char *end;
+
+				end = strchr(optarg, ',');
+				if (end == optarg || !end)
+					rte_exit(EXIT_FAILURE,
+						 "Invalid flowgen-mac: %s", optarg);
+
+				*end++ = 0;
+				if (rte_ether_unformat_addr(optarg, &in) != 0)
+					rte_exit(EXIT_FAILURE,
+						 "Invalid flowgen source MAC address: %s\n",
+						 optarg);
+				rte_ether_addr_copy(&in, &flowgen_mac_src_addr);
+
+				if (rte_ether_unformat_addr(end, &in) != 0)
+					rte_exit(EXIT_FAILURE,
+						 "Invalid flowgen destination MAC address: %s\n",
+						 optarg);
+				rte_ether_addr_copy(&in, &flowgen_mac_dst_addr);
 			}
 			if (!strcmp(lgopts[opt_idx].name, "mbcache")) {
 				n = atoi(optarg);

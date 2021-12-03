@@ -442,6 +442,7 @@ extern enum tx_pkt_split tx_pkt_split;
 extern uint8_t txonly_multi_flow;
 
 extern uint16_t nb_pkt_per_burst;
+extern int nb_flows_flowgen;
 extern uint16_t mb_mempool_cache;
 extern int8_t rx_pthresh;
 extern int8_t rx_hthresh;
@@ -455,6 +456,10 @@ extern uint16_t tx_udp_dst_port;
 
 extern uint32_t tx_ip_src_addr;
 extern uint32_t tx_ip_dst_addr;
+extern uint32_t flowgen_ip_src_addr;
+extern uint32_t flowgen_ip_dst_addr;
+extern struct rte_ether_addr flowgen_mac_src_addr;
+extern struct rte_ether_addr flowgen_mac_dst_addr;
 
 extern struct fwd_config cur_fwd_config;
 extern struct fwd_engine *cur_fwd_eng;
