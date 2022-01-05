@@ -4467,7 +4467,15 @@ rte_eth_dev_default_mac_addr_set(uint16_t port_id, struct rte_ether_addr *addr)
 	if (!rte_is_valid_assigned_ether_addr(addr))
 		return -EINVAL;
 
-	RTE_FUNC_PTR_OR_ERR_RET(*dev->dev_ops->mac_addr_set, -ENOTSUP);
+	/* Don't fail as unsupported; instead, set data structure and continue */
+	if ((*dev->dev_ops->mac_addr_set) == NULL) {
+
+
+		/* Update default address in NIC data structure */
+		rte_ether_addr_copy(addr, &dev->data->mac_addrs[0]);
+
+		return 0;
+	}
 
 	ret = (*dev->dev_ops->mac_addr_set)(dev, addr);
 	if (ret < 0)
